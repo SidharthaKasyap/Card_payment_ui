@@ -719,3 +719,32 @@ body {
 //   transform: translateX(-10px) rotate(45deg);
 //   pointer-events: none;
 // }
+.card-item__number,
+.card-item__info,
+.card-item__date {
+  position: relative;
+  transition: border 0.6s ease-in-out; /* Add this transition to animate the border */
+}
+
+.card-item__number,
+.card-item__info,
+.card-item__date {
+  position: relative;
+  transition: border 0.6s ease-in-out; /* Add this transition to animate the border */
+}
+
+.card-item__numberItem,
+.card-item__dateItem {
+  transition: border 0.6s ease-in-out; /* Add this for smoother transitions on text items */
+}
+
+
+
+/* Optional: You can also target a specific state on focus if necessary */
+.card-item__number:focus,
+.card-item__info:focus,
+.card-item__date:focus {
+  border: 2px solid white;
+  border-radius: 5px;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6); /* Optional: Add shadow effect for focus */
+}

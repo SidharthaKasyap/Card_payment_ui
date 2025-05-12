@@ -13,7 +13,7 @@ const CardForm = () => {
   });
 
   const [isCardFlipped, setIsCardFlipped] = useState(false); // Track flip state
-
+  const [focusedField, setFocusedField] = useState(null);
   const currentYear = new Date().getFullYear();
 
   const fields = {
@@ -121,6 +121,7 @@ const CardForm = () => {
           labels={formData}
           isFlipped={isCardFlipped} // Pass the flip state to the Card component
           setIsCardFlipped={setIsCardFlipped}
+          focused={focusedField}
         />
       </div>
 
@@ -136,6 +137,7 @@ const CardForm = () => {
             value={formData.cardNumber}
             maxLength={19}
             onInput={handleCardNumberInput}
+            onFocus={() => setFocusedField("cardNumber")}
             autoComplete="off"
             className="card-input__input"
           />
@@ -152,6 +154,7 @@ const CardForm = () => {
             value={formData.cardName}
             onInput={handleInputChange("cardName")}
             autoComplete="off"
+            onFocus={() => setFocusedField("cardName")}
             className="card-input__input"
           />
         </div>
@@ -165,6 +168,7 @@ const CardForm = () => {
                 id={fields.cardMonth}
                 className="card-input__input -select"
                 value={formData.cardMonth}
+                onFocus={() => setFocusedField("cardMonth")}
                 onChange={handleInputChange("cardMonth")}
               >
                 <option value="" disabled>
@@ -181,6 +185,7 @@ const CardForm = () => {
                 id={fields.cardYear}
                 className="card-input__input -select"
                 value={formData.cardYear}
+                onFocus={() => setFocusedField("cardYear")}
                 onChange={handleInputChange("cardYear")}
               >
                 <option value="" disabled>

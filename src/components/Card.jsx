@@ -1,5 +1,5 @@
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import React, { useEffect, useRef, useState } from "react";
 import "../App.scss";
 import cardBackgroundImage from "/assets/6.jpeg";
 import chip from "/assets/chip.png";
@@ -21,18 +21,8 @@ const CARD_TYPES = {
   jcb: /^35(2[89]|[3-8])/,
 };
 
-const Card = ({ labels, fields, isFlipped, setIsCardFlipped }) => {
-  const [focusStyle, setFocusStyle] = useState(null);
-  const [currentFocus, setCurrentFocus] = useState(null);
-  const [isFocused, setIsFocused] = useState(false);
+const Card = ({ labels, fields, isFlipped, focused }) => {
   const [currentPlaceholder, setCurrentPlaceholder] = useState("");
-
-  const refs = {
-    focusElement: useRef(null),
-    cardDate: useRef(null),
-    cardNumber: useRef(null),
-    cardName: useRef(null),
-  };
 
   const cardType = (() => {
     const number = labels.cardNumber || "";
@@ -42,110 +32,42 @@ const Card = ({ labels, fields, isFlipped, setIsCardFlipped }) => {
     );
   })();
 
-  const cardTypeImageUrl = cardType ? `/assets/${cardType}.png` : "";
-
-  const updateFocus = () => {
-    const target = refs[currentFocus]?.current;
-    if (target) {
-      setFocusStyle({
-        width: `${target.offsetWidth}px`,
-        height: `${target.offsetHeight}px`,
-        transform: `translateX(${target.offsetLeft}px) translateY(${target.offsetTop}px)`,
-      });
-    } else {
-      setFocusStyle(null);
-    }
-  };
-
-  const updatePlaceholder = () => {
-    setCurrentPlaceholder(PLACEHOLDERS[cardType] || PLACEHOLDERS.default);
-  };
-
-  // Focus handler
-  const handleFocus = (field) => {
-    setIsFocused(true);
-    const id = field.id;
-    setCurrentFocus(
-      id === fields.cardMonth || id === fields.cardYear ? "cardDate" : id
-    );
-    setIsCardFlipped(id === fields.cardCvv); // Flip the card when CVV is focused
-  };
-
-  // Blur handler
-  const handleBlur = () => {
-    setTimeout(() => {
-      if (!isFocused) setCurrentFocus(null);
-    }, 300);
-    setIsFocused(false);
-    if (refs.cardDate.current === document.activeElement) {
-      setIsCardFlipped(false); // Flip the card back when other fields are focused
-    }
-  };
+  const cardTypeImageUrl = `/assets/${cardType}.png`;
 
   useEffect(() => {
-    updatePlaceholder();
+    setCurrentPlaceholder(PLACEHOLDERS[cardType] || PLACEHOLDERS.default);
   }, [cardType]);
 
-  useEffect(() => {
-    updateFocus();
-  }, [currentFocus]);
-
-  // Setup event listeners
-  useEffect(() => {
-    const fields = document.querySelectorAll("[data-card-field]");
-    fields.forEach((field) => {
-      field.addEventListener("focus", () => handleFocus(field));
-      field.addEventListener("blur", handleBlur);
-    });
-
-    // Cleanup event listeners on unmount
-    return () => {
-      fields.forEach((field) => {
-        field.removeEventListener("focus", () => handleFocus(field));
-        field.removeEventListener("blur", handleBlur);
-      });
-    };
-  }, []);
-  // console.log(focusStyle,"");
   return (
     <motion.div
       className={`card-item ${isFlipped ? "-active" : ""}`}
       style={{
         backgroundImage: `url(${cardBackgroundImage})`,
         backgroundSize: "cover",
+        borderRadius: "15px",
         backgroundPosition: "center",
-        borderRadius: "15px", // Rounded corners
       }}
       initial={{ rotateY: 0 }}
       animate={{ rotateY: isFlipped ? 180 : 0 }}
-      transition={{ type: "spring", stiffness: 200, damping: 50, duration: 2 }} // Slow down flip
+      transition={{
+        type: "spring",
+        stiffness: 200,
+        damping: 50,
+        duration: 1.2,
+      }}
     >
       {/* Card Front */}
       <motion.div
         className="card-item__side -front"
-        initial={{ opacity: 1 }}
         animate={{ opacity: isFlipped ? 0 : 1 }}
-        transition={{ duration: 2 }}
-        style={{
-          borderRadius: "15px", // Apply rounded corners
-        }}
+        transition={{ duration: 0.8 }}
+        style={{ borderRadius: "15px" }}
       >
-        <div
-          ref={refs.focusElement}
-          className={`card-item__focus ${focusStyle ? "-active" : ""}`}
-          style={focusStyle}
-        />
         <div className="card-item__cover">
           <img
             src={cardBackgroundImage}
             className="card-item__bg"
             alt="Card Background"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              borderRadius: "15px", // Make sure image has rounded corners too
-            }}
           />
         </div>
 
@@ -153,64 +75,80 @@ const Card = ({ labels, fields, isFlipped, setIsCardFlipped }) => {
           <div className="card-item__top">
             <img src={chip} className="card-item__chip" alt="Chip" />
             <div className="card-item__type1">
-              {cardType && (
-                <img
-                  src={cardTypeImageUrl}
-                  alt="Card Type"
-                  className="card-item__typeImg1"
-                />
-              )}
+              <img
+                src={cardTypeImageUrl}
+                alt="Card Type"
+                className="card-item__typeImg1"
+              />
             </div>
           </div>
 
-          <label
+          <motion.label
             htmlFor={fields.cardNumber}
-            className="card-item__number"
-            ref={refs.cardNumber}
+            className={`card-item__number ${
+              focused === "cardNumber" ? "focused" : ""
+            }`}
+            animate={
+              focused === "cardNumber"
+                ? { border: "2px solid white", borderRadius: "5px" }
+                : { border: "2px solid transparent" }
+            }
+            transition={{ duration: 0.5 }}
           >
             {[...currentPlaceholder].map((n, i) => (
               <div className="card-item__numberItem" key={i}>
                 {labels.cardNumber.length > i ? labels.cardNumber[i] : n}
               </div>
             ))}
-          </label>
+          </motion.label>
 
           <div className="card-item__content">
-            <label
+            <motion.label
               htmlFor={fields.cardName}
-              className="card-item__info"
-              ref={refs.cardName}
+              className={`card-item__info ${
+                focused === "cardName" ? "focused" : ""
+              }`}
+              animate={
+                focused === "cardName"
+                  ? { border: "2px solid white", borderRadius: "5px" }
+                  : { border: "2px solid transparent" }
+              }
+              transition={{ duration: 0.5 }}
             >
               <div className="card-item__holder">Card Holder</div>
               <div className="card-item__name">
                 {labels.cardName
-                  ? labels.cardName
-                      .replace(/\s\s+/g, " ")
-                      .split(" ")
-                      .map((char, idx) => (
-                        <span className="card-item__nameItem" key={idx}>
-                          {char}
-                        </span>
-                      ))
-                  : "Full Name"}
+                  ? labels.cardName.split(" ").map((part, idx) => (
+                      <span className="card-item__nameItem" key={idx}>
+                        {part}
+                      </span>
+                    ))
+                  : "FULL NAME"}
               </div>
-            </label>
+            </motion.label>
 
-            <div className="card-item__date" ref={refs.cardDate}>
-              <label
-                htmlFor={fields.cardMonth}
-                className="card-item__dateTitle"
-              >
-                Expires
-              </label>
-              <label htmlFor={fields.cardMonth} className="card-item__dateItem">
+            <motion.div
+              className={`card-item__date ${
+                focused === "cardMonth" || focused === "cardYear"
+                  ? "focused"
+                  : ""
+              }`}
+              animate={
+                focused === "cardMonth" || focused === "cardYear"
+                  ? { border: "2px solid white", borderRadius: "5px" }
+                  : { border: "2px solid transparent" }
+              }
+              transition={{ duration: 0.5 }}
+            >
+              <label className="card-item__dateTitle">Expires</label>
+              <label className="card-item__dateItem">
                 {labels.cardMonth || "MM"}
               </label>
               /
-              <label htmlFor={fields.cardYear} className="card-item__dateItem">
-                {labels.cardYear ? String(labels.cardYear).slice(2, 4) : "YY"}
+              <label className="card-item__dateItem">
+                {labels.cardYear ? String(labels.cardYear).slice(2) : "YY"}
               </label>
-            </div>
+            </motion.div>
           </div>
         </div>
       </motion.div>
@@ -218,28 +156,19 @@ const Card = ({ labels, fields, isFlipped, setIsCardFlipped }) => {
       {/* Card Back */}
       <motion.div
         className="card-item__side -back"
-        initial={{ opacity: 0 }}
         animate={{ opacity: isFlipped ? 1 : 0 }}
-        transition={{ duration: 2 }}
-        style={{
-          borderRadius: "15px", // Apply rounded corners
-        }}
+        transition={{ duration: 1 }}
+        style={{ borderRadius: "15px" }}
       >
         <div className="card-item__cover">
           <img
             src={cardBackgroundImage}
             className="card-item__bg"
             alt="Card Background"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              borderRadius: "15px", // Image should also have rounded corners
-            }}
           />
         </div>
         <div className="card-item__band"></div>
-        <div className="card-item__cvv">
+        <motion.div className="card-item__cvv">
           <div className="card-item__cvvTitle">CVV</div>
           <div className="card-item__cvvBand">
             {labels.cardCvv?.split("").map((_, i) => (
@@ -247,15 +176,13 @@ const Card = ({ labels, fields, isFlipped, setIsCardFlipped }) => {
             ))}
           </div>
           <div className="card-item__type">
-            {cardType && (
-              <img
-                src={cardTypeImageUrl}
-                className="card-item__typeImg"
-                alt="Card Type"
-              />
-            )}
+            <img
+              src={cardTypeImageUrl}
+              className="card-item__typeImg"
+              alt="Card Type"
+            />
           </div>
-        </div>
+        </motion.div>
       </motion.div>
     </motion.div>
   );
